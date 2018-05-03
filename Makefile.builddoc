@@ -1,0 +1,195 @@
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+INTYPE ?= md
+
+OUTDIR ?= out
+
+SERVEPORT ?= 8000
+
+ifneq ($(PRINTER),)
+	LPOPTS = -d $(PRINTER)
+endif
+
+IN=index.$(INTYPE)
+OUT := $(OUTDIR)/$(shell date +%F)
+
+OUT_PDF 			  := $(OUT).pdf
+OUT_HTML    		  := $(OUT).html
+OUT_PRESENTATION_PDF  := $(OUT)-presentation.pdf
+OUT_PRESENTATION_HTML := $(OUT)-presentation.html
+OUT_DOCX              := $(OUT).docx
+OUT_TEX               := $(OUT).tex
+OUT_RST               := $(OUT).rst
+
+PDFVIEWER ?= evince --page-index=1
+
+PANDOCOPTS = \
+	--from markdown+yaml_metadata_block+native_divs+fenced_divs \
+	--verbose \
+	--email-obfuscation=none \
+	--pdf-engine=pdflatex \
+	--columns=2000 \
+	-V tables=true \
+	-V euro=yes \
+	-V colorlinks=yes \
+	-V linestretch=1.3 \
+	-V papersize=a4 \
+	-V fontsize=12pt \
+	-V fontfamily=libertine \
+	-V familydefault=sfdefault \
+	-V documentclass=scrartcl \
+	-V fontfamilyoptions= \
+	-V lof= \
+	-V lot=
+
+REVEALJSOPTS= \
+	--slide-level 2 \
+	--standalone \
+	-V revealjs-url=http://localhost:8000/revealjs \
+	-V controls=true \
+	-V slideNumber=true \
+	-V center=false \
+	-V transition=none \
+	-V theme=white
+
+
+PDFLATEXOPTS = \
+	-halt-on-error \
+	-file-line-error \
+
+PDFOPTS = \
+	--standalone \
+	--number-sections \
+	--toc \
+	--listings \
+	-V date=\\today \
+	-V geometry=left=2.5cm,top=2.5cm,right=2.5cm,bottom=2.5cm \
+	# -H $(ROOT_DIR)/common.tex \
+	# -H $(ROOT_DIR)/listings.tex \
+	# -H $(ROOT_DIR)/datetime.tex \
+
+CUSTOMTEX = $(DOC)/custom.tex
+ifneq ("$(wildcard $(CUSTOMTEX))","")
+	PDFOPTS += -H $(CUSTOMTEX)
+endif
+
+BEAMEROPTS = \
+	--standalone \
+	-V theme=default \
+	-V colortheme=default
+
+HTMLOPTS = \
+	--no-highlight
+
+RSTOPTS = \
+	-p
+
+PANDOC=pandoc $(PANDOCOPTS)
+PDFLATEX = pdflatex $(PDFLATEXOPTS)
+
+.PHONY: pdf-view
+pdf-view: $(OUT_PDF)
+	$(PDFVIEWER) $(OUT_PDF)
+
+.PHONY: pdf
+pdf: $(OUT_PDF)
+
+.PHONY: rst
+rst: $(OUT_RST)
+
+.PHONY: pdf-print
+pdf-print: $(OUT_PDF)
+	lp $(LPOPTS) -- $(OUT_PDF)
+
+.PHONY: presentation-pdf-view
+presentation-pdf-view: $(OUT_PRESENTATION_PDF)
+	$(PDFVIEWER) --presentation $(OUT_PRESENTATION_PDF)
+
+.PHONY: presentation-pdf
+presentation-pdf: $(OUT_PRESENTATION_PDF)
+
+.PHONY: presentation-html-serve
+presentation-html-serve: $(OUT_PRESENTATION_HTML)
+	cd /srv \
+		&& ln -sf /doc/assets /srv/assets \
+		&& ln -sf /usr/local/lib/revealjs /srv/revealjs \
+		&& ln -sf /doc/$(OUT_PRESENTATION_HTML) /srv/index.html \
+		&& python3 -m http.server $(SERVEPORT)
+
+.PHONY: presentation-html-view
+presentation-html-view: $(OUT_PRESENTATION_HTML)
+	$(BROWSER) $(OUT_PRESENTATION_HTML)
+
+.PHONY: presentation-html
+presentation-html: $(OUT_PRESENTATION_HTML)
+
+.PHONY: html
+html: $(OUT_HTML)
+
+.PHONY: html-clipboard
+html-clipboard: html
+	xclip -in -selection clipboard < $(OUT_HTML)
+
+$(OUT_PRESENTATION_HTML): $(IN)
+	$(PANDOC) \
+		--to revealjs \
+		$(REVEALJSOPTS) \
+		--output $(OUT_PRESENTATION_HTML) \
+		$(IN)
+
+$(OUT_PRESENTATION_PDF): $(IN)
+	$(PANDOC) \
+		--to beamer \
+		$(BEAMEROPTS) \
+		--output $(OUT_PRESENTATION_PDF) \
+		$(IN)
+
+$(OUT_PDF): $(IN) out
+ifeq  ($(INTYPE), md)
+	$(PANDOC) \
+		--to latex \
+		$(PDFOPTS) \
+		--output $(OUT_PDF) \
+		$(IN)
+else
+	 $(PDFLATEX) \
+		-output-directory $(OUTDIR) \
+		$(IN)
+endif
+
+$(OUT_TEX): $(IN) out
+	$(PANDOC) \
+		--to latex \
+		$(LATEXOPTS) \
+		--output $(OUT_TEX) \
+		$(IN)
+
+$(OUT_HTML): $(IN) out
+	$(PANDOC) \
+		--to html \
+		$(HTMLOPTS) \
+		--output $(OUT_HTML) \
+		$(IN)
+
+$(OUT_DOCX): $(IN) out
+	$(PANDOC) \
+		--to docx \
+		$(DOCXOPTS) \
+		--output $(OUT_DOCX) \
+		$(IN)
+
+$(OUT_RST): $(IN) out
+	$(PANDOC) \
+		--to rst \
+		$(RSTOPTS) \
+		--output $(OUT_RST) \
+		$(IN)
+
+.PHONY: clean
+clean:
+	rm -rf out/*
+
+out:
+	mkdir --parents --verbose $(OUTDIR)

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+(( $# < 1 )) && { printf 'usage: %s DOC [ACTION]\n' "$(basename $0)" ; exit 1 ; }
+doc="$1" ; shift
+cd $doc
+target="${1:-}" ; shift
+make -f $(dirname $(realpath $0))/Makefile ${target} DOC="${doc}" "${@}"
