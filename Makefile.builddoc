@@ -15,8 +15,8 @@ endif
 IN=index.$(INTYPE)
 OUT := $(OUTDIR)/$(shell date +%F)
 
-OUT_PDF 			  := $(OUT).pdf
-OUT_HTML    		  := $(OUT).html
+OUT_PDF               := $(OUT).pdf
+OUT_HTML              := $(OUT).html
 OUT_PRESENTATION_PDF  := $(OUT)-presentation.pdf
 OUT_PRESENTATION_HTML := $(OUT)-presentation.html
 OUT_DOCX              := $(OUT).docx
