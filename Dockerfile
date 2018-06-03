@@ -1,8 +1,7 @@
 FROM registry.haktec.de/latex
 
 RUN yum -y install \
-    pandoc \
-    texlive-libertine
+    pandoc
 
 ENV REVEALJS_PATH /usr/local/lib/revealjs
 ENV REVEALJS_VERSION 3.6.0
