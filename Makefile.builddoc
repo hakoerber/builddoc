@@ -29,7 +29,7 @@ PANDOCOPTS = \
 	--from markdown+yaml_metadata_block+native_divs+fenced_divs \
 	--verbose \
 	--email-obfuscation=none \
-	--pdf-engine=pdflatex \
+	--pdf-engine=lualatex \
 	--columns=2000 \
 	-V tables=true \
 	-V euro=yes \
