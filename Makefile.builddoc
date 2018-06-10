@@ -30,7 +30,6 @@ PANDOCOPTS = \
 	--from markdown+yaml_metadata_block+native_divs+fenced_divs \
 	--verbose \
 	--email-obfuscation=none \
-	--pdf-engine=lualatex \
 	--columns=2000 \
 	-V tables=true \
 	-V euro=yes \
@@ -63,6 +62,7 @@ PDFLATEXOPTS = \
 PDFOPTS = \
 	--standalone \
 	--number-sections \
+	--pdf-engine=lualatex \
 	--toc \
 	--listings \
 	-V date=\\today \
@@ -78,8 +78,14 @@ endif
 
 BEAMEROPTS = \
 	--standalone \
+	--slide-level 2 \
+	--pdf-engine=pdflatex \
+	-H $(CUSTOM_DIR)/beamer.tex \
 	-V theme=default \
-	-V colortheme=default
+	-V colortheme=default \
+	-V theme=metropolis \
+	-V documentclass=beamer \
+	-V CJKmainfont=
 
 HTMLOPTS = \
 	--no-highlight
