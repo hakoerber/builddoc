@@ -13,5 +13,6 @@ RUN cd /tmp \
 
 ADD builddoc /usr/local/bin/builddoc
 ADD Makefile.builddoc /usr/local/bin/Makefile
+ADD custom /usr/local/share/builddoc/custom
 
 ENTRYPOINT ["builddoc", "/doc"]
