@@ -4,4 +4,11 @@ pipeline:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
-      - make
+      - make image
+
+  push:
+    image: registry.haktec.de/docker:2bf92189803126ca18eb9dc75ae689ffc6319ffa
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - make push
